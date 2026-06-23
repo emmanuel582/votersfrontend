@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown } from 'lucide-react';
 import { useRealtimeSync } from '../lib/realtime';
+import { LiveFeed } from '../components/LiveFeed';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -101,6 +102,8 @@ export const Home = () => {
           </span>
         </div>
       )}
+
+      <LiveFeed />
 
       {categories.length === 0 && !loading && (
         <div className="glass-panel p-12 flex items-center justify-center text-center mt-8">
