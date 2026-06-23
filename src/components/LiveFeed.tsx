@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Crown, Flame, TrendingUp, Zap } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, ChevronUp, Crown } from 'lucide-react';
 import { useRealtimeSync } from '../lib/realtime';
+import { useToast } from './ToastContext';
 import './LiveFeed.css';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const HINT_KEY = 'live-feed-hint-seen';
+const EXPANDED_MAX = 5;
+const POLL_MS = 8000;
+const TICKER_MS = 3500;
 
 type FeedEvent = {
   id: string;
@@ -23,30 +28,58 @@ type FeedStats = {
 
 type LiveFeedData = {
   enabled: boolean;
-  eventName?: string;
-  hashtag?: string;
   stats: FeedStats | null;
   events: FeedEvent[];
   insights: string[];
 };
 
-function timeAgo(iso: string) {
-  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (sec < 10) return 'just now';
-  if (sec < 60) return `${sec}s ago`;
+function timeAgo(iso: string, now: number) {
+  const sec = Math.floor((now - new Date(iso).getTime()) / 1000);
+  if (sec < 10) return 'now';
+  if (sec < 60) return `${sec}s`;
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  return `${Math.floor(hr / 24)}d ago`;
+  if (min < 60) return `${min}m`;
+  return `${Math.floor(min / 60)}h`;
+}
+
+function buildTickerMessages(data: LiveFeedData): string[] {
+  const msgs: string[] = [];
+
+  data.events.slice(0, 10).forEach((e) => {
+    const emoji = e.categoryEmoji || '👑';
+    msgs.push(`${emoji} ${e.voterName} voted for ${e.nomineeName.split(' ')[0]} · ${e.categoryName}`);
+  });
+
+  if (data.stats) {
+    const { votesLastHour, votesToday, totalVotes } = data.stats;
+    if (votesLastHour > 0) {
+      msgs.push(`⚡ ${votesLastHour} vote${votesLastHour === 1 ? '' : 's'} in the last hour`);
+    }
+    if (votesToday > 0) {
+      msgs.push(`📈 ${votesToday} vote${votesToday === 1 ? '' : 's'} today`);
+    }
+    if (totalVotes > 0) {
+      msgs.push(`🗳️ ${totalVotes} total votes cast`);
+    }
+  }
+
+  msgs.push(...data.insights);
+
+  const unique = [...new Set(msgs.filter(Boolean))];
+  return unique.length > 0 ? unique : ['Waiting for the first vote…'];
 }
 
 export const LiveFeed = () => {
+  const toast = useToast();
   const [data, setData] = useState<LiveFeedData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [insightIndex, setInsightIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const [tickerIndex, setTickerIndex] = useState(0);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [justUpdated, setJustUpdated] = useState(false);
+  const [now, setNow] = useState(Date.now());
   const seenIdsRef = useRef<Set<string>>(new Set());
+  const hintShownRef = useRef(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const fetchFeed = useCallback(async () => {
@@ -62,11 +95,17 @@ export const LiveFeed = () => {
 
       if (seenIdsRef.current.size > 0 && freshIds.size > 0) {
         setNewIds(freshIds);
-        setTimeout(() => setNewIds(new Set()), 2500);
+        setJustUpdated(true);
+        setTickerIndex(0);
+        setTimeout(() => {
+          setNewIds(new Set());
+          setJustUpdated(false);
+        }, 2500);
       }
 
       json.events.forEach((e) => seenIdsRef.current.add(e.id));
       setData(json);
+      setNow(Date.now());
     } catch (err) {
       console.error('Live feed error:', err);
     } finally {
@@ -76,25 +115,47 @@ export const LiveFeed = () => {
 
   useEffect(() => {
     fetchFeed();
-    pollRef.current = setInterval(fetchFeed, 12000);
+    pollRef.current = setInterval(fetchFeed, POLL_MS);
     return () => clearInterval(pollRef.current);
   }, [fetchFeed]);
 
+  useEffect(() => {
+    const clock = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(clock);
+  }, []);
+
   useRealtimeSync('public-live-feed', [{ table: 'votes', event: 'INSERT' }, { table: 'votes', event: 'UPDATE' }], fetchFeed);
 
+  const tickerMessages = useMemo(() => (data ? buildTickerMessages(data) : []), [data]);
+
   useEffect(() => {
-    if (!data?.insights?.length) return;
+    if (tickerMessages.length <= 1) return;
     const timer = setInterval(() => {
-      setInsightIndex((i) => (i + 1) % data.insights.length);
-    }, 4000);
+      setTickerIndex((i) => (i + 1) % tickerMessages.length);
+    }, TICKER_MS);
     return () => clearInterval(timer);
-  }, [data?.insights]);
+  }, [tickerMessages]);
+
+  useEffect(() => {
+    if (tickerIndex >= tickerMessages.length) setTickerIndex(0);
+  }, [tickerIndex, tickerMessages.length]);
+
+  useEffect(() => {
+    if (loading || !data?.enabled || hintShownRef.current) return;
+    if (localStorage.getItem(HINT_KEY)) return;
+    hintShownRef.current = true;
+    const t = setTimeout(() => {
+      toast.info('Tap Live Feed to expand recent votes 👆');
+      localStorage.setItem(HINT_KEY, '1');
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [loading, data?.enabled, toast]);
 
   if (loading) {
     return (
-      <div className="live-feed live-feed--loading">
-        <div className="live-feed__pulse" />
-        <span>Loading live feed…</span>
+      <div className="live-bar live-bar--loading">
+        <span className="live-bar__dot" />
+        <span className="live-bar__label">Live Feed</span>
       </div>
     );
   }
@@ -102,79 +163,90 @@ export const LiveFeed = () => {
   if (!data?.enabled) return null;
 
   const stats = data.stats;
-  const currentInsight = data.insights[insightIndex] || 'Waiting for the first vote…';
+  const tickerText = tickerMessages[tickerIndex] || 'Waiting for votes…';
+  const visibleEvents = data.events.slice(0, EXPANDED_MAX);
 
   return (
-    <section className="live-feed" aria-label="Live voting activity">
-      <div className="live-feed__header">
-        <div className="live-feed__title">
-          <span className="live-feed__dot" />
-          <span>LIVE FEED</span>
-        </div>
-        {data.hashtag && <span className="live-feed__hashtag">{data.hashtag}</span>}
-      </div>
+    <section
+      className={`live-bar${expanded ? ' live-bar--open' : ''}${justUpdated ? ' live-bar--updated' : ''}`}
+      aria-label="Live Feed"
+    >
+      <button
+        type="button"
+        className="live-bar__row"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-label={expanded ? 'Collapse Live Feed' : 'Expand Live Feed'}
+      >
+        <span className="live-bar__badge">
+          <span className="live-bar__dot" />
+          <span className="live-bar__label">Live Feed</span>
+        </span>
 
-      {stats && (
-        <div className="live-feed__stats">
-          <StatPill icon={<Zap size={14} />} label="Last hour" value={stats.votesLastHour} hot={stats.votesLastHour >= 3} />
-          <StatPill icon={<TrendingUp size={14} />} label="Today" value={stats.votesToday} />
-          <StatPill icon={<Crown size={14} />} label="Total" value={stats.totalVotes} />
-        </div>
-      )}
+        <span className="live-bar__ticker-wrap">
+          <span className="live-bar__ticker" key={`${tickerIndex}-${tickerText}`}>
+            {tickerText}
+          </span>
+        </span>
 
-      <div className="live-feed__ticker" key={insightIndex}>
-        <Flame size={14} className="live-feed__ticker-icon" />
-        <span className="live-feed__ticker-text">{currentInsight}</span>
-      </div>
-
-      <div className="live-feed__events">
-        {data.events.length === 0 ? (
-          <p className="live-feed__empty">No votes yet — be the first to vote! 🗳️</p>
-        ) : (
-          data.events.map((event, idx) => (
-            <div
-              key={event.id}
-              className={`live-feed__event${newIds.has(event.id) ? ' live-feed__event--new' : ''}`}
-              style={{ animationDelay: `${idx * 40}ms` }}
-            >
-              <div className="live-feed__event-photo">
-                {event.nomineePhoto ? (
-                  <img src={event.nomineePhoto} alt="" />
-                ) : (
-                  <span>{event.categoryEmoji || '👑'}</span>
-                )}
-              </div>
-              <div className="live-feed__event-body">
-                <p className="live-feed__event-text">
-                  <strong>{event.voterName}</strong> voted for{' '}
-                  <strong className="live-feed__nominee">{event.nomineeName.split(' ')[0]}</strong>
-                  {' '}in <span className="live-feed__category">{event.categoryName}</span>
-                </p>
-                <span className="live-feed__event-time">{timeAgo(event.createdAt)}</span>
-              </div>
-              <Crown size={14} className="live-feed__event-crown" />
-            </div>
-          ))
+        {stats && (
+          <span className="live-bar__chips">
+            <span className={`live-bar__chip${stats.votesLastHour >= 1 ? ' live-bar__chip--hot' : ''}`}>
+              {stats.votesLastHour}/hr
+            </span>
+            <span className="live-bar__chip">{stats.votesToday} today</span>
+          </span>
         )}
+
+        <span className="live-bar__chevron">
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </span>
+      </button>
+
+      <div className="live-bar__panel" aria-hidden={!expanded}>
+        <div className="live-bar__panel-inner">
+          {stats && (
+            <div className="live-bar__mini-stats">
+              <span><strong>{stats.votesLastHour}</strong> last hour</span>
+              <span className="live-bar__sep">·</span>
+              <span><strong>{stats.votesToday}</strong> today</span>
+              <span className="live-bar__sep">·</span>
+              <span><strong>{stats.totalVotes}</strong> total</span>
+            </div>
+          )}
+
+          {visibleEvents.length === 0 ? (
+            <p className="live-bar__empty">No votes yet — cast the first one! 🗳️</p>
+          ) : (
+            <ul className="live-bar__list">
+              {visibleEvents.map((event) => (
+                <li
+                  key={event.id}
+                  className={`live-bar__item${newIds.has(event.id) ? ' live-bar__item--new' : ''}`}
+                >
+                  <span className="live-bar__item-emoji">
+                    {event.nomineePhoto ? (
+                      <img src={event.nomineePhoto} alt="" />
+                    ) : (
+                      event.categoryEmoji || '👑'
+                    )}
+                  </span>
+                  <span className="live-bar__item-text">
+                    <strong>{event.voterName}</strong> → <strong>{event.nomineeName.split(' ')[0]}</strong>
+                    <span className="live-bar__item-cat"> · {event.categoryName}</span>
+                  </span>
+                  <span className="live-bar__item-time">{timeAgo(event.createdAt, now)}</span>
+                  <Crown size={12} className="live-bar__item-crown" />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {data.events.length > EXPANDED_MAX && (
+            <p className="live-bar__more">+{data.events.length - EXPANDED_MAX} more recent votes</p>
+          )}
+        </div>
       </div>
     </section>
   );
 };
-
-const StatPill = ({
-  icon,
-  label,
-  value,
-  hot = false,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: number;
-  hot?: boolean;
-}) => (
-  <div className={`live-feed__stat${hot ? ' live-feed__stat--hot' : ''}`}>
-    <span className="live-feed__stat-icon">{icon}</span>
-    <span className="live-feed__stat-value">{value}</span>
-    <span className="live-feed__stat-label">{label}</span>
-  </div>
-);
