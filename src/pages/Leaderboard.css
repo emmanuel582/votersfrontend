@@ -1,0 +1,72 @@
+.leaderboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .leaderboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.bg-gold-glow {
+  background-color: var(--color-gold-glow);
+}
+
+.border-gold {
+  border: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.final-results-banner {
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  animation: fadeIn 1s ease;
+}
+
+.lock-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.lock-toggle:hover {
+  opacity: 1;
+}
+
+.ranking-card {
+  padding: var(--spacing-5);
+}
+
+.ranking-row {
+  padding: var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.ranking-row.is-leader {
+  background: transparent;
+  border-left: 2px solid var(--color-gold);
+}
+
+.rank-number {
+  width: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.ranking-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ranking-row.is-leader .ranking-photo {
+  border: 2px solid var(--color-gold);
+}
+
+.ranking-name {
+  font-size: 0.95rem;
+}

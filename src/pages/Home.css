@@ -1,0 +1,93 @@
+.home-header {
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-4) 0;
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-gold-glow);
+  border-radius: var(--radius-xl);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-top: var(--spacing-2);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.live-ticker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-3);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-success);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(44, 85, 48, 0.7);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(44, 85, 48, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(44, 85, 48, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(44, 85, 48, 0); }
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-4);
+  color: var(--color-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: var(--spacing-2);
+}
+
+.mt-6 {
+  margin-top: var(--spacing-6);
+}
+
+.category-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.category-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.icon-wrapper {
+  background-color: rgba(197, 160, 89, 0.1);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-name {
+  font-size: 1.2rem;
+  margin-bottom: var(--spacing-1);
+}
+
+.text-sm {
+  font-size: 0.85rem;
+}
+
+.leader-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-gold);
+}

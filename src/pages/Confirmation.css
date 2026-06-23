@@ -1,0 +1,220 @@
+.text-success {
+  color: var(--color-success);
+}
+
+.confirmation-page {
+  padding-bottom: 2rem;
+}
+
+.vote-share-card-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 1rem;
+}
+
+.vote-share-card-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--color-gold);
+  z-index: 0;
+  animation: expandLine 300ms ease-out forwards;
+}
+
+.vote-share-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem;
+  background:
+    linear-gradient(145deg, rgba(212, 175, 55, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(212, 175, 55, 0.12) 0%, transparent 35%),
+    var(--color-base);
+  border: 1px solid var(--color-border-gold);
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.08),
+    0 24px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  animation: fadeUpOvershoot 450ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards 300ms;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.vote-share-card__glow {
+  position: absolute;
+  inset: auto -20% -40% -20%;
+  height: 55%;
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.vote-share-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.vote-share-card__brand {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.vote-share-card__badge {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.vote-share-card__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 0;
+}
+
+.vote-share-card__photo-frame {
+  flex: 0 0 42%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--color-gold) 0%, rgba(153, 122, 0, 0.5) 100%);
+  box-shadow: 0 12px 32px rgba(212, 175, 55, 0.18);
+}
+
+.vote-share-card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 13px;
+  display: block;
+  background: var(--color-surface);
+}
+
+.vote-share-card__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.vote-share-card__emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+  opacity: 0.85;
+}
+
+.vote-share-card__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2rem);
+  line-height: 1.05;
+  color: var(--color-text);
+  margin-bottom: 0.35rem;
+  word-break: break-word;
+}
+
+.vote-share-card__category {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-gold-dim);
+}
+
+.vote-share-card__divider {
+  width: 48px;
+  height: 2px;
+  margin: 0.85rem 0;
+  background: linear-gradient(90deg, var(--color-gold), transparent);
+}
+
+.vote-share-card__vote-line {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.vote-share-card__vote-line strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.vote-share-card__footer {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  text-align: center;
+}
+
+.vote-share-card__footer span {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.confirmation-actions {
+  max-width: 520px;
+  animation: fadeUp 400ms ease forwards 700ms;
+  opacity: 0;
+}
+
+@media (max-width: 480px) {
+  .vote-share-card {
+    padding: 1rem;
+  }
+
+  .vote-share-card__body {
+    gap: 0.85rem;
+  }
+
+  .vote-share-card__photo-frame {
+    flex-basis: 38%;
+  }
+
+  .vote-share-card__vote-line {
+    font-size: 0.82rem;
+  }
+}
+
+@keyframes expandLine {
+  0% { width: 0%; left: 50%; opacity: 0; }
+  50% { width: 100%; left: 0%; opacity: 1; }
+  100% { width: 100%; left: 0%; opacity: 0; }
+}
+
+@keyframes fadeUpOvershoot {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
