@@ -94,7 +94,7 @@ const CategoryRanking = ({ category, adminView }: { category: any; adminView: bo
 
       <div className="flex-col gap-2">
         {category.nominees.map((n: any, index: number) => {
-          const isLeader = index === 0 && (n.voteCount > 0);
+          const isLeader = index === 0 && (n.voteCount == null || n.voteCount > 0);
           const percent = totalVotes > 0 ? ((n.voteCount || 0) / totalVotes) * 100 : 0;
 
           return (
