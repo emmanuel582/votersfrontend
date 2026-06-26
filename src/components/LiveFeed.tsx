@@ -115,8 +115,6 @@ export const LiveFeed = () => {
 
   useEffect(() => {
     fetchFeed();
-    pollRef.current = setInterval(fetchFeed, POLL_MS);
-    return () => clearInterval(pollRef.current);
   }, [fetchFeed]);
 
   useEffect(() => {

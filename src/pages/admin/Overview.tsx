@@ -78,8 +78,6 @@ export const AdminOverview = () => {
 
   useEffect(() => {
     refreshAll();
-    pollRef.current = setInterval(refreshAll, 8000);
-    return () => clearInterval(pollRef.current);
   }, [refreshAll]);
 
   useRealtimeSync('admin-overview', ['votes', 'app_settings', 'action_logs', 'nominees', 'categories'], refreshAll);
