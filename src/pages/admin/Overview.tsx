@@ -17,7 +17,6 @@ export const AdminOverview = () => {
   const [deadlineInput, setDeadlineInput] = useState('');
 
   const getToken = async () => (await supabase.auth.getSession()).data.session?.access_token;
-  const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const syncPendingVotes = async () => {
     try {

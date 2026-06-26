@@ -7,7 +7,6 @@ import './LiveFeed.css';
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const HINT_KEY = 'live-feed-hint-seen';
 const EXPANDED_MAX = 5;
-const POLL_MS = 8000;
 const TICKER_MS = 3500;
 
 type FeedEvent = {
@@ -80,7 +79,6 @@ export const LiveFeed = () => {
   const [now, setNow] = useState(Date.now());
   const seenIdsRef = useRef<Set<string>>(new Set());
   const hintShownRef = useRef(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const fetchFeed = useCallback(async () => {
     try {
