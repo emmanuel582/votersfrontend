@@ -72,6 +72,17 @@ export const AdminSettings = () => {
               onChange={() => handleSave({ voting_status: settings.voting_status === 'PAUSED' ? 'OPEN' : 'PAUSED' })} 
             />
           </div>
+
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--color-text)' }}>Bulk Voting</span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--color-text-muted)' }}>Allow voters to buy multiple votes at once (e.g. 10 votes = ₦{((settings.vote_price_kobo || 10000) / 100) * 10}).</span>
+            </div>
+            <Toggle 
+              checked={!!settings.bulk_voting_enabled} 
+              onChange={() => handleSave({ bulk_voting_enabled: !settings.bulk_voting_enabled })} 
+            />
+          </div>
         </div>
 
         {/* Pricing */}

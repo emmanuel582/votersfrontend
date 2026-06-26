@@ -14,6 +14,7 @@ export const PaymentRedirect = () => {
 
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [voteCount, setVoteCount] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [nominee, setNominee] = useState<any>(null);
@@ -26,7 +27,7 @@ export const PaymentRedirect = () => {
     try {
       const [catRes, settingsRes] = await Promise.all([
         fetch(`${API}/api/categories/${categoryId}`),
-        supabase.from('app_settings').select('voting_status, vote_price_kobo').eq('id', 'singleton').single(),
+        supabase.from('app_settings').select('voting_status, vote_price_kobo, bulk_voting_enabled').eq('id', 'singleton').single(),
       ]);
       if (catRes.ok) {
         const cat = await catRes.json();
@@ -53,6 +54,8 @@ export const PaymentRedirect = () => {
   useRealtimeSync(`payment-${categoryId}`, ['nominees', 'categories', 'app_settings'], fetchData, [categoryId, nomineeId]);
 
   const votePrice = settings?.vote_price_kobo ? settings.vote_price_kobo / 100 : 100;
+  const bulkEnabled = !!settings?.bulk_voting_enabled;
+  const totalPrice = votePrice * voteCount;
   const votingBlocked = settings && settings.voting_status !== 'OPEN';
 
   const handlePay = async (e: React.FormEvent) => {
@@ -73,6 +76,7 @@ export const PaymentRedirect = () => {
           categoryId,
           voterEmail: email,
           voterName: name || undefined,
+          voteCount: bulkEnabled ? voteCount : 1,
         }),
       });
 
@@ -159,9 +163,83 @@ export const PaymentRedirect = () => {
           color: 'var(--color-gold)',
           fontFamily: 'var(--font-sans)',
         }}>
-          ₦{votePrice.toLocaleString()}
+          ₦{votePrice.toLocaleString()} per vote
         </div>
       </div>
+
+      {/* Vote Quantity — only shown when bulk voting is enabled */}
+      {bulkEnabled && (
+        <div className="glass-panel flex-col gap-3" style={{ padding: '20px 24px' }}>
+          <label className="font-sans font-bold" style={{ fontSize: '14px', color: 'var(--color-text)' }}>Number of Votes</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setVoteCount(Math.max(1, voteCount - 1))}
+              style={{
+                width: '40px', height: '40px', borderRadius: '10px',
+                background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                color: 'var(--color-text)', fontSize: '20px', fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s',
+              }}
+            >−</button>
+            <input
+              type="number"
+              min={1}
+              value={voteCount}
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                if (!isNaN(v) && v >= 1) setVoteCount(v);
+              }}
+              style={{
+                width: '80px', textAlign: 'center',
+                background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                borderRadius: '10px', padding: '10px 8px',
+                color: 'var(--color-gold)', fontFamily: 'var(--font-sans)',
+                fontSize: '20px', fontWeight: 700, outline: 'none',
+              }}
+              onFocus={(e) => (e.target.style.borderColor = 'var(--color-gold)')}
+              onBlur={(e) => (e.target.style.borderColor = 'var(--color-border)')}
+            />
+            <button
+              type="button"
+              onClick={() => setVoteCount(voteCount + 1)}
+              style={{
+                width: '40px', height: '40px', borderRadius: '10px',
+                background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                color: 'var(--color-text)', fontSize: '20px', fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s',
+              }}
+            >+</button>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+            {[5, 10, 20, 50, 100].map(q => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setVoteCount(q)}
+                style={{
+                  padding: '6px 14px', borderRadius: '8px',
+                  background: voteCount === q ? 'rgba(212,175,55,0.15)' : 'var(--color-surface)',
+                  border: voteCount === q ? '1px solid var(--color-gold)' : '1px solid var(--color-border)',
+                  color: voteCount === q ? 'var(--color-gold)' : 'var(--color-text-muted)',
+                  fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
+              >{q} votes</button>
+            ))}
+          </div>
+          <div style={{
+            marginTop: '8px', padding: '12px 16px', borderRadius: '10px',
+            background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            <span className="font-sans" style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{voteCount} vote{voteCount > 1 ? 's' : ''} × ₦{votePrice.toLocaleString()}</span>
+            <span className="font-sans font-bold" style={{ fontSize: '18px', color: 'var(--color-gold)' }}>₦{totalPrice.toLocaleString()}</span>
+          </div>
+        </div>
+      )}
 
       {/* Payment Form */}
       <form onSubmit={handlePay} className="flex-col gap-4" style={{ marginTop: '4px' }}>
@@ -222,7 +300,7 @@ export const PaymentRedirect = () => {
           disabled={loading}
           style={{ padding: '16px', marginTop: '8px', width: '100%' }}
         >
-          {loading ? 'Processing...' : `Proceed to Pay ₦${votePrice.toLocaleString()}`}
+          {loading ? 'Processing...' : `Proceed to Pay ₦${totalPrice.toLocaleString()}`}
           {loading && <div className="loading-line" />}
         </button>
 

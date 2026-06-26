@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../components/ToastContext';
 import { useRealtimeSync } from '../../lib/realtime';
@@ -24,7 +24,7 @@ export const AdminOverview = () => {
         method: 'POST',
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
-    } catch {}
+    } catch { }
   };
 
   const fetchStats = async () => {
@@ -33,7 +33,7 @@ export const AdminOverview = () => {
         headers: { Authorization: `Bearer ${await getToken()}` }
       });
       if (res.ok) setStats(await res.json());
-    } catch {}
+    } catch { }
   };
 
   const fetchSettings = async () => {
@@ -58,7 +58,7 @@ export const AdminOverview = () => {
       ].sort((a, b) => b.ts - a.ts).slice(0, 20);
 
       setFeed(combined);
-    } catch {}
+    } catch { }
   };
 
   const fetchLeaders = async () => {
@@ -67,7 +67,7 @@ export const AdminOverview = () => {
         headers: { Authorization: `Bearer ${await getToken()}` }
       });
       if (res.ok) setLeaders(await res.json());
-    } catch {}
+    } catch { }
   };
 
   const refreshAll = useCallback(async () => {
@@ -88,9 +88,9 @@ export const AdminOverview = () => {
     try {
       await fetch(`${API}/api/admin/settings`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${await getToken()}` 
+          Authorization: `Bearer ${await getToken()}`
         },
         body: JSON.stringify(updates)
       });
@@ -172,18 +172,18 @@ export const AdminOverview = () => {
             {isOpen && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'currentColor', animation: 'pulse 2s infinite' }} />}
             {!isOpen && <AlertTriangle size={16} />}
             <span style={{ fontWeight: 700, fontSize: '13px', letterSpacing: '0.03em', fontFamily: 'var(--font-sans)' }}>
-              {isResults ? '🏆 FINAL RESULTS REVEALED' : 
-               isOpen ? 'VOTING IS OPEN' : 
-               isPaused ? 'VOTING IS PAUSED' : 
-               'VOTING CLOSED'}
+              {isResults ? '🏆 FINAL RESULTS REVEALED' :
+                isOpen ? 'VOTING IS OPEN' :
+                  isPaused ? 'VOTING IS PAUSED' :
+                    'VOTING CLOSED'}
             </span>
           </div>
 
           {/* Quick action buttons */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {(isOpen || isPaused) && (
-              <button 
-                onClick={handlePauseResume} 
+              <button
+                onClick={handlePauseResume}
                 disabled={actionLoading}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
@@ -198,9 +198,9 @@ export const AdminOverview = () => {
               </button>
             )}
             {isOpen && (
-              <button 
+              <button
                 onClick={handleStop}
-                disabled={actionLoading} 
+                disabled={actionLoading}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
                   padding: '5px 12px', borderRadius: '6px',
@@ -213,9 +213,9 @@ export const AdminOverview = () => {
               </button>
             )}
             {(isClosed || isPaused) && !isResults && (
-              <button 
+              <button
                 onClick={handleReopen}
-                disabled={actionLoading} 
+                disabled={actionLoading}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
                   padding: '5px 12px', borderRadius: '6px',
@@ -235,8 +235,8 @@ export const AdminOverview = () => {
           <Calendar size={14} />
           {editingDeadline ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <input 
-                type="datetime-local" 
+              <input
+                type="datetime-local"
                 value={deadlineInput}
                 onChange={(e) => setDeadlineInput(e.target.value)}
                 style={{
@@ -251,7 +251,7 @@ export const AdminOverview = () => {
                   outline: 'none',
                 }}
               />
-              <button 
+              <button
                 onClick={handleSaveDeadline}
                 disabled={actionLoading}
                 style={{
@@ -263,7 +263,7 @@ export const AdminOverview = () => {
               >
                 Save
               </button>
-              <button 
+              <button
                 onClick={() => setEditingDeadline(false)}
                 style={{
                   padding: '5px 10px', borderRadius: '6px',
@@ -277,12 +277,12 @@ export const AdminOverview = () => {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>
-                {settings?.voting_end_time 
+                {settings?.voting_end_time
                   ? `Closes: ${new Date(settings.voting_end_time).toLocaleString()}`
                   : 'No deadline set'
                 }
               </span>
-              <button 
+              <button
                 onClick={openDeadlineEditor}
                 style={{
                   padding: '3px 10px', borderRadius: '6px',
@@ -323,9 +323,9 @@ export const AdminOverview = () => {
         </span>
         <div style={{ display: 'flex', gap: '2px', height: '28px', alignItems: 'flex-end', maxWidth: '300px' }}>
           {stats.sparkline?.map((s: number, i: number) => (
-            <div 
-              key={i} 
-              style={{ 
+            <div
+              key={i}
+              style={{
                 flex: 1,
                 borderRadius: '2px 2px 0 0',
                 height: s !== 0 ? '100%' : '20%',
